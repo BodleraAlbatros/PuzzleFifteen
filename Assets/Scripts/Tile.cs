@@ -1,11 +1,11 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class Tile : MonoBehaviour
 {
-    public Vector2 correctPosition;
-    public Vector2 currentPosition;
+    public Vector2Int correctPosition;
+    public Vector2Int currentPosition;
     public SlidingPuzzle puzzle;
 
     private TMP_Text label;
@@ -16,9 +16,10 @@ public class Tile : MonoBehaviour
         GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
-    public void SetNumber(int number)
+    public void SetNumber(int n)
     {
-        label.text = number.ToString();
+        if (label != null)
+            label.text = n.ToString();
     }
 
     void OnClick()

@@ -1,117 +1,89 @@
 ﻿using System.Collections.Generic;
-using TMPro;
+using System.IO;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
+using SFB; // StandaloneFileBrowser
 
 public class SlidingPuzzle : MonoBehaviour
 {
-    [Header("Board Settings")]
+    [Header("References")]
     public GameObject tilePrefab;
     public RectTransform boardParent;
-    public int size = 3;
+    public GameObject winText;
+    public TMP_Text movesText;
+    public TMP_Text recordText;
 
-    [Header("UI")]
-    public Button RestartButton;
-    public Button Button8Tile;
-    public Button Button15Tile;
-    public TMP_Text MoveText;
-    public TMP_Text WinText;
+    [Header("Settings")]
+    public int size = 4;
+    public float maxBoardSize = 400f;
 
     private List<Tile> tiles = new List<Tile>();
-    private Vector2 emptyPosition;
-
+    private Vector2Int emptyPosition;
+    private int moveCount;
     private float tileSize;
-    private float startX;
-    private float startY;
-
-    private int moves = 0;
-    private bool isShuffling = false;
-    private bool gameWon = false;
 
     void Start()
     {
-        if (RestartButton != null)
-            RestartButton.onClick.AddListener(RestartGame);
-
-        if (Button8Tile != null)
-            Button8Tile.onClick.AddListener(() => SetGridSize(3));
-
-        if (Button15Tile != null)
-            Button15Tile.onClick.AddListener(() => SetGridSize(4));
-
-        StartGame();
+        AdjustBoardSize();
+        NewGame();
     }
 
-    void StartGame()
+    // ======================
+    // Выбор уровня
+    // ======================
+    public void SetLevel(int gridSize)
     {
-        moves = 0;
-        gameWon = false;
+        size = gridSize;
+        AdjustBoardSize();
+        NewGame();
+    }
 
-        if (WinText != null)
-            WinText.gameObject.SetActive(false);
+    void AdjustBoardSize()
+    {
+        tileSize = maxBoardSize / size;
+        if (boardParent != null)
+            boardParent.sizeDelta = new Vector2(tileSize * size, tileSize * size);
+    }
 
-        UpdateMoveText();
-
-        CalculateTileSize();
-        CalculateStartPosition();
+    public void NewGame()
+    {
+        moveCount = 0;
+        UpdateMovesUI();
         GenerateBoard();
         Shuffle(100);
-    }
 
-    public void RestartGame()
-    {
-        foreach (Tile t in tiles)
-            Destroy(t.gameObject);
-
-        tiles.Clear();
-        StartGame();
-    }
-
-    public void SetGridSize(int newSize)
-    {
-        size = newSize;
-        RestartGame();
-    }
-
-    void CalculateTileSize()
-    {
-        // tileSize = ширина панели / количество плиток
-        tileSize = Mathf.Min(boardParent.rect.width, boardParent.rect.height) / size;
-    }
-
-    void CalculateStartPosition()
-    {
-        startX = -(size - 1) * tileSize / 2f;
-        startY = (size - 1) * tileSize / 2f;
+        if (winText != null) winText.SetActive(false);
+        LoadRecord();
     }
 
     void GenerateBoard()
     {
-        int number = 1;
+        foreach (Transform child in boardParent)
+            Destroy(child.gameObject);
 
+        tiles.Clear();
+        int number = 1;
         for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
             {
                 if (x == size - 1 && y == size - 1)
                 {
-                    emptyPosition = new Vector2(x, y);
+                    emptyPosition = new Vector2Int(x, y);
                     continue;
                 }
 
                 GameObject obj = Instantiate(tilePrefab, boardParent);
                 RectTransform rect = obj.GetComponent<RectTransform>();
-                rect.sizeDelta = new Vector2(tileSize, tileSize); // 🟢 подстраиваем размер
-                rect.anchoredPosition = new Vector2(
-                    startX + x * tileSize,
-                    startY - y * tileSize
-                );
 
                 Tile tile = obj.GetComponent<Tile>();
-                tile.SetNumber(number);
-                tile.correctPosition = new Vector2(x, y);
-                tile.currentPosition = new Vector2(x, y);
+                tile.correctPosition = new Vector2Int(x, y);
+                tile.currentPosition = new Vector2Int(x, y);
                 tile.puzzle = this;
+
+                rect.sizeDelta = new Vector2(tileSize, tileSize);
+                rect.anchoredPosition = GetAnchoredPosition(tile.currentPosition);
+                tile.SetNumber(number);
 
                 tiles.Add(tile);
                 number++;
@@ -119,76 +91,195 @@ public class SlidingPuzzle : MonoBehaviour
         }
     }
 
-    public void TryMove(Tile tile)
+    Vector2 GetAnchoredPosition(Vector2Int gridPos)
     {
-        if (gameWon) return;
+        return new Vector2(
+            -(size - 1) * tileSize / 2f + gridPos.x * tileSize,
+            (size - 1) * tileSize / 2f - gridPos.y * tileSize
+        );
+    }
 
-        if (Vector2.Distance(tile.currentPosition, emptyPosition) == 1)
+    // ======================
+    // Движение плитки
+    // ======================
+    public bool TryMove(Tile tile)
+    {
+        if (Vector2Int.Distance(tile.currentPosition, emptyPosition) == 1)
         {
             MoveTile(tile);
-
-            if (!isShuffling)
-            {
-                moves++;
-                UpdateMoveText();
-
-                if (CheckWin())
-                {
-                    gameWon = true;
-                    if (WinText != null)
-                        WinText.gameObject.SetActive(true);
-                }
-            }
+            return true;
         }
+        return false;
     }
 
     void MoveTile(Tile tile)
     {
-        Vector2 oldPos = tile.currentPosition;
+        Vector2Int oldPos = tile.currentPosition;
         tile.currentPosition = emptyPosition;
         emptyPosition = oldPos;
 
-        RectTransform rect = tile.GetComponent<RectTransform>();
-        rect.anchoredPosition = new Vector2(
-            startX + tile.currentPosition.x * tileSize,
-            startY - tile.currentPosition.y * tileSize
-        );
+        tile.GetComponent<RectTransform>().anchoredPosition = GetAnchoredPosition(tile.currentPosition);
+
+        moveCount++;
+        UpdateMovesUI();
+
+        if (IsSolved())
+        {
+            if (winText != null) winText.SetActive(true);
+            SaveRecord();
+        }
     }
 
-    void Shuffle(int shuffleMoves)
+    void MoveTileInternal(Tile tile)
     {
-        isShuffling = true;
-
-        for (int i = 0; i < shuffleMoves; i++)
-        {
-            List<Tile> neighbors = GetNeighbors();
-            Tile randomTile = neighbors[Random.Range(0, neighbors.Count)];
-            MoveTile(randomTile);
-        }
-
-        isShuffling = false;
+        Vector2Int oldPos = tile.currentPosition;
+        tile.currentPosition = emptyPosition;
+        emptyPosition = oldPos;
+        tile.GetComponent<RectTransform>().anchoredPosition = GetAnchoredPosition(tile.currentPosition);
     }
 
     List<Tile> GetNeighbors()
     {
         List<Tile> result = new List<Tile>();
         foreach (Tile t in tiles)
-            if (Vector2.Distance(t.currentPosition, emptyPosition) == 1)
+            if (Vector2Int.Distance(t.currentPosition, emptyPosition) == 1)
                 result.Add(t);
         return result;
     }
 
-    bool CheckWin()
+    bool IsSolved()
     {
-        foreach (Tile tile in tiles)
-            if (tile.currentPosition != tile.correctPosition)
+        foreach (Tile t in tiles)
+            if (t.currentPosition != t.correctPosition)
                 return false;
         return true;
     }
 
-    void UpdateMoveText()
+    void UpdateMovesUI()
     {
-        if (MoveText != null)
-            MoveText.text = "Счет: " + moves.ToString();
+        if (movesText != null)
+            movesText.text = "Счет: " + moveCount;
     }
+
+    // ======================
+    // Рекорд
+    // ======================
+    void SaveRecord()
+    {
+        string key = "Record_" + size;
+        int best = PlayerPrefs.GetInt(key, int.MaxValue);
+        if (moveCount < best)
+        {
+            PlayerPrefs.SetInt(key, moveCount);
+            PlayerPrefs.Save();
+        }
+        LoadRecord();
+    }
+
+    void LoadRecord()
+    {
+        string key = "Record_" + size;
+        int best = PlayerPrefs.GetInt(key, 0);
+        if (best > 0 && recordText != null)
+            recordText.text = "Рекорд: " + best;
+        else if (recordText != null)
+            recordText.text = "Рекорд: -";
+    }
+
+    // ======================
+    // Перемешивание
+    // ======================
+    void Shuffle(int moves)
+    {
+        for (int i = 0; i < moves; i++)
+        {
+            List<Tile> neighbors = GetNeighbors();
+            Tile randomTile = neighbors[Random.Range(0, neighbors.Count)];
+            MoveTileInternal(randomTile);
+        }
+
+        if (IsSolved())
+            Shuffle(moves);
+
+        moveCount = 0;
+        UpdateMovesUI();
+    }
+
+    // ======================
+    // Сохранение через диалог
+    // ======================
+    public void SaveToFileWithDialog()
+    {
+        var path = StandaloneFileBrowser.SaveFilePanel("Save Puzzle", "", "puzzle_save", "json");
+        if (!string.IsNullOrEmpty(path))
+        {
+            SaveToJson(path);
+        }
+    }
+
+    void SaveToJson(string path)
+    {
+        PuzzleSaveData data = new PuzzleSaveData();
+        data.size = size;
+        data.moves = moveCount;
+        data.emptyX = emptyPosition.x;
+        data.emptyY = emptyPosition.y;
+
+        foreach (Tile t in tiles)
+        {
+            data.tileX.Add(t.currentPosition.x);
+            data.tileY.Add(t.currentPosition.y);
+        }
+
+        string json = JsonUtility.ToJson(data, true);
+        File.WriteAllText(path, json);
+        Debug.Log("Saved: " + path);
+    }
+
+    // ======================
+    // Загрузка через диалог
+    // ======================
+    public void LoadFromFileWithDialog()
+    {
+        var paths = StandaloneFileBrowser.OpenFilePanel("Load Puzzle", "", "json", false);
+        if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
+        {
+            LoadFromJson(paths[0]);
+        }
+    }
+
+    private void LoadFromJson(string path)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.Log("Save not found");
+            return;
+        }
+
+        string json = File.ReadAllText(path);
+        PuzzleSaveData data = JsonUtility.FromJson<PuzzleSaveData>(json);
+
+        if (data.size != size || data.tileX.Count != tiles.Count)
+        {
+            Debug.Log("Save corrupted or size mismatch");
+            return;
+        }
+
+        emptyPosition = new Vector2Int(data.emptyX, data.emptyY);
+        moveCount = data.moves;
+
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            Tile t = tiles[i];
+            t.currentPosition = new Vector2Int(data.tileX[i], data.tileY[i]);
+            t.GetComponent<RectTransform>().anchoredPosition = GetAnchoredPosition(t.currentPosition);
+        }
+
+        UpdateMovesUI();
+        LoadRecord();
+        if (winText != null)
+            winText.SetActive(false);
+    }
+
+
 }

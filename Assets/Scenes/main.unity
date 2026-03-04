@@ -201,7 +201,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 132390665}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 288665922}
+        m_TargetAssemblyTypeName: SlidingPuzzle, Assembly-CSharp
+        m_MethodName: LoadFromFileWithDialog
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &132390665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -529,12 +541,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SlidingPuzzle
   tilePrefab: {fileID: 7984148570758280029, guid: 2dcc7c46017e6f74197f710f12567f5a, type: 3}
   boardParent: {fileID: 1782866765}
+  winText: {fileID: 1723066051}
+  movesText: {fileID: 861136558}
+  recordText: {fileID: 471092276}
   size: 3
-  RestartButton: {fileID: 1846432765}
-  Button8Tile: {fileID: 489496526}
-  Button15Tile: {fileID: 254562755}
-  MoveText: {fileID: 861136558}
-  WinText: {fileID: 1723066053}
+  maxBoardSize: 400
 --- !u!4 &288665923
 Transform:
   m_ObjectHideFlags: 0
@@ -1382,6 +1393,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 861136556}
   m_CullTransparentMesh: 1
+--- !u!1 &1030432360
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1030432362}
+  - component: {fileID: 1030432361}
+  m_Layer: 0
+  m_Name: LevelSelector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1030432361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030432360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59e41f17a97a0934b976032d692973f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelSelector
+  puzzle: {fileID: 288665922}
+  button8: {fileID: 489496526}
+  button15: {fileID: 254562755}
+--- !u!4 &1030432362
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030432360}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1236629988
 GameObject:
   m_ObjectHideFlags: 0
@@ -1950,7 +2008,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1846432766}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 288665922}
+        m_TargetAssemblyTypeName: SlidingPuzzle, Assembly-CSharp
+        m_MethodName: NewGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1846432766
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2208,7 +2278,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2087006741}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 288665922}
+        m_TargetAssemblyTypeName: SlidingPuzzle, Assembly-CSharp
+        m_MethodName: SaveToFileWithDialog
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2087006741
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2366,3 +2448,4 @@ SceneRoots:
   - {fileID: 2138237879}
   - {fileID: 729330285}
   - {fileID: 288665923}
+  - {fileID: 1030432362}

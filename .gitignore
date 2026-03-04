@@ -17,3 +17,5 @@ UserSettings/
 # Save files
 savegame.json
 save/
+# Unity logs
+Logs/

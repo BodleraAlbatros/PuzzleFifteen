@@ -16,14 +16,14 @@ public class Tile : MonoBehaviour
         GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
-    public void SetNumber(int n)
+    public void SetNumber(int number)
     {
-        label.text = n.ToString();
+        label.text = number.ToString();
     }
 
     void OnClick()
     {
-        puzzle.TryMove(this);
+        if (puzzle != null)
+            puzzle.TryMove(this);
     }
 }
-

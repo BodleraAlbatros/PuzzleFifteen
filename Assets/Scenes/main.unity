@@ -531,9 +531,8 @@ MonoBehaviour:
   boardParent: {fileID: 1782866765}
   size: 3
   RestartButton: {fileID: 1846432765}
-  tileSize: 100
-  startX: 0
-  startY: 0
+  MoveText: {fileID: 861136558}
+  WinText: {fileID: 1723066053}
 --- !u!4 &288665923
 Transform:
   m_ObjectHideFlags: 0

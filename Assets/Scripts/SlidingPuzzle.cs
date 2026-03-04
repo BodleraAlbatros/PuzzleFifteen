@@ -1,47 +1,62 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SlidingPuzzle : MonoBehaviour
 {
+    [Header("Board Settings")]
     public GameObject tilePrefab;
     public RectTransform boardParent;
     public int size = 3;
-    public Button RestartButton; // кнопка перезапуска
+
+    [Header("UI")]
+    public Button RestartButton;
+    public TMP_Text MoveText;
+    public TMP_Text WinText;
 
     private List<Tile> tiles = new List<Tile>();
     private Vector2 emptyPosition;
 
-    [HideInInspector] public float tileSize = 100f;
-    [HideInInspector] public float startX;
-    [HideInInspector] public float startY;
+    private float tileSize = 100f;
+    private float startX;
+    private float startY;
+
+    private int moves = 0;
+    private bool isShuffling = false;
+    private bool gameWon = false;
 
     void Start()
     {
         startX = -(size - 1) * tileSize / 2f;
         startY = (size - 1) * tileSize / 2f;
 
-        // Привязываем кнопку Restart
         if (RestartButton != null)
             RestartButton.onClick.AddListener(RestartGame);
 
+        StartGame();
+    }
+
+    void StartGame()
+    {
+        moves = 0;
+        gameWon = false;
+
+        if (WinText != null)
+            WinText.gameObject.SetActive(false);
+
+        UpdateMoveText();
         GenerateBoard();
         Shuffle(100);
     }
 
-    // Метод для кнопки Restart
     public void RestartGame()
     {
-        // Удаляем старые плитки
         foreach (Tile t in tiles)
-        {
             Destroy(t.gameObject);
-        }
-        tiles.Clear();
 
-        // Создаём заново
-        GenerateBoard();
-        Shuffle(100);
+        tiles.Clear();
+        StartGame();
     }
 
     void GenerateBoard()
@@ -79,14 +94,27 @@ public class SlidingPuzzle : MonoBehaviour
         }
     }
 
-    public bool TryMove(Tile tile)
+    public void TryMove(Tile tile)
     {
+        if (gameWon) return;
+
         if (Vector2.Distance(tile.currentPosition, emptyPosition) == 1)
         {
             MoveTile(tile);
-            return true;
+
+            if (!isShuffling)
+            {
+                moves++;
+                UpdateMoveText();
+
+                if (CheckWin())
+                {
+                    gameWon = true;
+                    if (WinText != null)
+                        WinText.gameObject.SetActive(true);
+                }
+            }
         }
-        return false;
     }
 
     void MoveTile(Tile tile)
@@ -102,14 +130,18 @@ public class SlidingPuzzle : MonoBehaviour
         );
     }
 
-    void Shuffle(int moves)
+    void Shuffle(int shuffleMoves)
     {
-        for (int i = 0; i < moves; i++)
+        isShuffling = true;
+
+        for (int i = 0; i < shuffleMoves; i++)
         {
             List<Tile> neighbors = GetNeighbors();
             Tile randomTile = neighbors[Random.Range(0, neighbors.Count)];
             MoveTile(randomTile);
         }
+
+        isShuffling = false;
     }
 
     List<Tile> GetNeighbors()
@@ -123,5 +155,21 @@ public class SlidingPuzzle : MonoBehaviour
         }
 
         return result;
+    }
+
+    bool CheckWin()
+    {
+        foreach (Tile tile in tiles)
+        {
+            if (tile.currentPosition != tile.correctPosition)
+                return false;
+        }
+        return true;
+    }
+
+    void UpdateMoveText()
+    {
+        if (MoveText != null)
+            MoveText.text = "Счет: " + moves.ToString();
     }
 }

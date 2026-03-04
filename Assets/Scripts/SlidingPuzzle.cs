@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,13 +12,15 @@ public class SlidingPuzzle : MonoBehaviour
 
     [Header("UI")]
     public Button RestartButton;
+    public Button Button8Tile;
+    public Button Button15Tile;
     public TMP_Text MoveText;
     public TMP_Text WinText;
 
     private List<Tile> tiles = new List<Tile>();
     private Vector2 emptyPosition;
 
-    private float tileSize = 100f;
+    private float tileSize;
     private float startX;
     private float startY;
 
@@ -28,11 +30,14 @@ public class SlidingPuzzle : MonoBehaviour
 
     void Start()
     {
-        startX = -(size - 1) * tileSize / 2f;
-        startY = (size - 1) * tileSize / 2f;
-
         if (RestartButton != null)
             RestartButton.onClick.AddListener(RestartGame);
+
+        if (Button8Tile != null)
+            Button8Tile.onClick.AddListener(() => SetGridSize(3));
+
+        if (Button15Tile != null)
+            Button15Tile.onClick.AddListener(() => SetGridSize(4));
 
         StartGame();
     }
@@ -46,6 +51,9 @@ public class SlidingPuzzle : MonoBehaviour
             WinText.gameObject.SetActive(false);
 
         UpdateMoveText();
+
+        CalculateTileSize();
+        CalculateStartPosition();
         GenerateBoard();
         Shuffle(100);
     }
@@ -57,6 +65,24 @@ public class SlidingPuzzle : MonoBehaviour
 
         tiles.Clear();
         StartGame();
+    }
+
+    public void SetGridSize(int newSize)
+    {
+        size = newSize;
+        RestartGame();
+    }
+
+    void CalculateTileSize()
+    {
+        // tileSize = ширина панели / количество плиток
+        tileSize = Mathf.Min(boardParent.rect.width, boardParent.rect.height) / size;
+    }
+
+    void CalculateStartPosition()
+    {
+        startX = -(size - 1) * tileSize / 2f;
+        startY = (size - 1) * tileSize / 2f;
     }
 
     void GenerateBoard()
@@ -75,7 +101,7 @@ public class SlidingPuzzle : MonoBehaviour
 
                 GameObject obj = Instantiate(tilePrefab, boardParent);
                 RectTransform rect = obj.GetComponent<RectTransform>();
-
+                rect.sizeDelta = new Vector2(tileSize, tileSize); // 🟢 подстраиваем размер
                 rect.anchoredPosition = new Vector2(
                     startX + x * tileSize,
                     startY - y * tileSize
@@ -83,7 +109,6 @@ public class SlidingPuzzle : MonoBehaviour
 
                 Tile tile = obj.GetComponent<Tile>();
                 tile.SetNumber(number);
-
                 tile.correctPosition = new Vector2(x, y);
                 tile.currentPosition = new Vector2(x, y);
                 tile.puzzle = this;
@@ -147,29 +172,23 @@ public class SlidingPuzzle : MonoBehaviour
     List<Tile> GetNeighbors()
     {
         List<Tile> result = new List<Tile>();
-
         foreach (Tile t in tiles)
-        {
             if (Vector2.Distance(t.currentPosition, emptyPosition) == 1)
                 result.Add(t);
-        }
-
         return result;
     }
 
     bool CheckWin()
     {
         foreach (Tile tile in tiles)
-        {
             if (tile.currentPosition != tile.correctPosition)
                 return false;
-        }
         return true;
     }
 
     void UpdateMoveText()
     {
         if (MoveText != null)
-            MoveText.text = "����: " + moves.ToString();
+            MoveText.text = "Счет: " + moves.ToString();
     }
 }

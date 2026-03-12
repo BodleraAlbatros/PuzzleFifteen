@@ -1,0 +1,8 @@
+* 160f29b (HEAD -> main, tag: v1.0.0, origin/main, origin/feature/save-load, feature/save-load) Удалил логи Unity и обновил .gitignore
+* 5bddc6b Implement save/load with StandaloneFileBrowser and update SlidingPuzzle and Tile scripts
+* 8abaec4 (origin/feature/levels, feature/levels) version: adaptive tiles, move counter, win detection, level switching 3x3/4x4
+* 7d420c8 (origin/feature/gameplay, feature/gameplay) Add tile movement, move counter, win detection and WinText
+* ac6bf72 Generate tiles for grid with empty cell
+* 820cbc1 (origin/feature/ui, feature/ui) Add Canvas, tile panel, control buttons and ыgit add .
+* ea2e850 Add Canvas, tile panel
+* 34d1666 Initial commit: base Unity project
